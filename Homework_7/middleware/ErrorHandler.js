@@ -2,9 +2,9 @@ function ErrorHandler (err, req, res, next) {
     if (err) {
         console.log(err.message)
         res.json({
-            erroreMessage: err.message
+            erreorMessage: err.message
         })
-    }   
+    }
 }
 
-export { ErrorHandler }
+export {ErrorHandler}
