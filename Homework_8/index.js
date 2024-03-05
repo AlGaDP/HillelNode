@@ -1,42 +1,54 @@
 import express from 'express'
 import jwt from "jsonwebtoken"
+import passport from 'passport'
+import { ExtractJwt } from 'passport-jwt'
+import { Strategy } from 'passport-jwt'
 import 'dotenv/config'
 import { ErrorHandler } from './middleware/ErrorHandler.js'
+import { usersDB } from './DB/simulationDB.js'
 
+const users = usersDB()
 const tokenSecretKey = process.env.TOKEN_SECRET_KEY;
 const app = express();
+
 app.use(express.json());
+app.use(passport.initialize());
 
-
-app.post('/api/auth/refresh-token', (req, res) => {
-    const { refreshToken } = req.body;
-
-    if (!refreshToken) {
-        return res.status(400).json({ error: 'The refresh token is missing.' });
-    }
+const jwtOptions = {
+    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+    secretOrKey: tokenSecretKey
+};
+const JwtStrategy = Strategy;
+passport.use(new JwtStrategy(jwtOptions, (payload, done) => {
+    const { userId } = payload
 
     try {
-        const decoded = jwt.verify(refreshToken, tokenSecretKey);
-        
-        const accessToken = jwt.sign({ 'sub': decoded.sub, 
-                                       'name': decoded.name }, tokenSecretKey, { expiresIn: '15m' });
-
-         res.status(200).json({ accessToken });
-    } catch (err) {
-        if (err.name === 'TokenExpiredError') {
-            return res.status(401).json({ error: 'Expired or invalid refresh token.' });
+        const user = users.find(user => user.id === userId)
+        if (user) {
+            done(null, user)
         } else {
-            return res.status(400).json({ error: 'Error in the input data or invalid refresh token' });
+            done(null, false)
         }
+    } catch (e) {
+        console.log(e)
     }
-});
+}));
 
+app.post('/api/auth/refresh-token', passport.authenticate('jwt', { session: false }), (req, res) => {
+    const accessToken = jwt.sign({
+        userId: req.user.id,
+        username: req.user.username,
+        email: req.user.email
+    }, tokenSecretKey, { expiresIn: '15m' });
+
+    res.status(200).json({ accessToken });
+});
 
 app.use((req, res, next) => {
     const error = new Error('Not Found');
     error.status = 404;
     next(error);
-  });
+});
 
 app.use(ErrorHandler)
 
