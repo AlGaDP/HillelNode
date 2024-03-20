@@ -42,7 +42,7 @@ app.post('/upload', upload.single('video'), (req, res) => {
     }, 100);
 
   } catch (error) {
-    res.status(500).json({ message: 'Помилка завантаження відео.', error: error.message });
+    res.status(500).json({ message: 'Error loading video', error: error.message });
   }
 });
 
