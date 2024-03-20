@@ -5,9 +5,11 @@ import { Strategy } from 'passport-jwt'
 import 'dotenv/config'
 import { ErrorHandler } from './middleware/ErrorHandler.js'
 import { usersDB } from './DB/simulationDB.js'
+import sequelize from './config/sequelize-config.js'
 import mongoose from 'mongoose'
 import { mongoURI } from './config/mongodb-config.js'
 import { productRouter } from './Routes/productRouter.js'
+import { userRouter } from './Routes/userRouter.js'
 
 const users = usersDB()
 const tokenSecretKey = process.env.TOKEN_SECRET_KEY;
@@ -15,7 +17,7 @@ const app = express();
 
 app.use(express.json());
 app.use(passport.initialize());
-app.use(productRouter);
+app.use(productRouter, userRouter);
 
 mongoose.connect(mongoURI)
     .then(() => console.log('Connected!'))
@@ -49,6 +51,8 @@ app.use((req, res, next) => {
 });
 
 app.use(ErrorHandler)
+
+sequelize.sync().then(() => console.log('db is ready'))
 
 app.listen(3000, () => {
     console.log('Server listening on port 3000');
