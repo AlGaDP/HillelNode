@@ -5,8 +5,6 @@ import { ProductModel } from '../MongoDBModels/products.js'
 const productRouter = new Router()
 
 
-
-
 productRouter.post('/product', async (req, res) => {
 
     try {
@@ -29,7 +27,51 @@ productRouter.post('/product', async (req, res) => {
 
 })
 
-productRouter.get('/product:id', async (req, res) => {
+productRouter.put('/product/:id', async (req, res) => {
+    const id = req.params.id;
+
+    try {
+            const updatedProductData = {
+            name: req.body.name,
+            amount: req.body.amount,
+            price: req.body.price
+        };
+
+        const updatedProduct = await ProductModel.findByIdAndUpdate(id, updatedProductData, { new: true });
+
+        if (!updatedProduct) {
+            return res.status(404).json({ error: 'Продукт не знайдено' });
+        }
+
+        res.status(200).json({ updatedProduct });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+productRouter.patch('/product/:id', async (req, res) => {
+    const id = req.params.id;
+
+    try {
+        const updatedProductData = {
+            name: req.body.name,
+            amount: req.body.amount,
+            price: req.body.price
+        };
+
+        const updatedProduct = await ProductModel.findByIdAndUpdate(id, updatedProductData, { new: true });
+
+        if (!updatedProduct) {
+            return res.status(404).json({ error: 'Продукт не знайдено' });
+        }
+
+        res.status(200).json({ updatedProduct });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+productRouter.get('/product/:id', async (req, res) => {
 
     try {
 
